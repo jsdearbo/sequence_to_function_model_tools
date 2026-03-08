@@ -70,7 +70,8 @@ class TestBhattacharyyaLoss:
 
     def test_identical_distributions_low_loss(self):
         loss_fn = BhattacharyyaLoss()
-        signal = torch.abs(torch.randn(2, 1, 50)) + 0.1
+        # Need T > 1 for meaningful bin-level normalization across tasks
+        signal = torch.abs(torch.randn(2, 4, 50)) + 0.1
         loss = loss_fn(signal, signal.clone())
         assert loss.item() < 0.01
 
