@@ -73,15 +73,14 @@ class PSILoss(nn.Module):
 
 class BhattacharyyaLoss(nn.Module):
     """
-    Bhattacharyya distance loss for comparing predicted and target
-    distributions over genomic positions.
+    Bin-level Bhattacharyya distance loss for multitask genomic prediction.
 
-    Treats per-position predictions as discrete distributions and minimizes
-    the Bhattacharyya distance (maximizes overlap) between predicted
-    and target profiles.
+    At each output bin, normalizes predictions and targets across the
+    task dimension to form distributions, then computes the Bhattacharyya
+    distance. This penalizes mismatches in the *relative proportion*
+    across tasks at each genomic position, independent of overall scale.
 
-    Useful when the shape of the signal profile matters more than
-    pointwise accuracy (e.g. RNA-seq coverage patterns).
+    Shape convention: (B, T, L) where T = tasks and L = output bins.
 
     Args:
         eps: Small constant for numerical stability.
@@ -101,24 +100,33 @@ class BhattacharyyaLoss(nn.Module):
         Args:
             pred: Predicted signal, shape (B, T, L).
             target: Target signal, same shape.
-            mask: Optional mask, same shape.
+            mask: Optional mask, shape (B, T, L). Loss is averaged over
+                bins where *any* task is valid.
         """
         if mask is not None:
             pred = pred * mask
             target = target * mask
 
-        # Normalize to distributions along the position axis
-        pred_sum = pred.sum(dim=-1, keepdim=True).clamp(min=self.eps)
-        target_sum = target.sum(dim=-1, keepdim=True).clamp(min=self.eps)
+        # Normalize across tasks (dim=1) at each bin
+        pred_sum = pred.sum(dim=1, keepdim=True).clamp(min=self.eps)
+        target_sum = target.sum(dim=1, keepdim=True).clamp(min=self.eps)
 
-        p = pred / pred_sum
+        p = pred / pred_sum    # (B, T, L)
         q = target / target_sum
 
-        # Bhattacharyya coefficient: sum(sqrt(p * q))
-        bc = (torch.sqrt(p * q + self.eps)).sum(dim=-1)
+        # Bhattacharyya coefficient per bin: sum_t(sqrt(p_t * q_t))
+        bc = torch.sqrt(p * q + self.eps).sum(dim=1)  # (B, L)
 
-        # Distance = -log(BC)
-        return (-torch.log(bc.clamp(min=self.eps))).mean()
+        # Distance per bin = -log(BC)
+        dist = -torch.log(bc.clamp(min=self.eps))  # (B, L)
+
+        if mask is not None:
+            # A bin is valid if any task has coverage
+            bin_valid = mask.any(dim=1).float()  # (B, L)
+            n_valid = bin_valid.sum().clamp(min=1)
+            return (dist * bin_valid).sum() / n_valid
+
+        return dist.mean()
 
 
 class MaskedMSELoss(nn.Module):
