@@ -210,9 +210,15 @@ def inject_lora(root: nn.Module, cfg: LoRAConfig) -> None:
             if cfg.verbose:
                 logger.info("[LoRA] Wrapped: %s", name)
 
-    # Freeze everything except LoRA params
-    for n, p in root.named_parameters():
-        p.requires_grad = "A.weight" in n or "B.weight" in n
+    # Freeze everything
+    for p in root.parameters():
+        p.requires_grad = False
+
+    # Enable LoRA params
+    for m in root.modules():
+        if isinstance(m, (LoRALinear, LoRAConv1d)):
+            m.A.weight.requires_grad = True
+            m.B.weight.requires_grad = True
 
     # Freeze normalization layers
     if cfg.freeze_norms:
@@ -223,6 +229,12 @@ def inject_lora(root: nn.Module, cfg: LoRAConfig) -> None:
                     p.requires_grad = False
 
     logger.info("[LoRA] Wrapped %d modules (rank=%d)", wrapped_count, cfg.rank)
+    
+    if wrapped_count == 0:
+        raise RuntimeError(
+            "No modules matched LoRA target patterns. "
+            "Verify module names with: list(model.named_modules())."
+        )
 
 
 def merge_lora(root: nn.Module) -> None:
