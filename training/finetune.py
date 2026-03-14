@@ -184,6 +184,16 @@ def inject_lora(root: nn.Module, cfg: LoRAConfig) -> None:
     Args:
         root: The model to modify (e.g. the Borzoi backbone).
         cfg: LoRA configuration specifying rank, targets, etc.
+
+    Important:
+        The root module must match the prefix used in target_patterns.
+        For example, if patterns start with "embedding.", call:
+
+            inject_lora(model, cfg)
+
+        not:
+
+            inject_lora(model.embedding, cfg)
     """
     wrapped_count = 0
 
@@ -229,7 +239,7 @@ def inject_lora(root: nn.Module, cfg: LoRAConfig) -> None:
                     p.requires_grad = False
 
     logger.info("[LoRA] Wrapped %d modules (rank=%d)", wrapped_count, cfg.rank)
-    
+
     if wrapped_count == 0:
         raise RuntimeError(
             "No modules matched LoRA target patterns. "
