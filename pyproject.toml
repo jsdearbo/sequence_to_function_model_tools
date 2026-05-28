@@ -9,6 +9,24 @@ description = "Tools for training, fine-tuning, and interpreting genomic sequenc
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
+authors = [
+    {name = "Jake Dearborn", email = "jakedearborn@gmail.com"},
+]
+keywords = ["genomics", "sequence-models", "fine-tuning", "lora", "splicing", "foundation-models", "deep-learning"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.urls]
+Repository = "https://github.com/jsdearbo/sequence_to_function_model_tools"
+"Bug Tracker" = "https://github.com/jsdearbo/sequence_to_function_model_tools/issues"
+
 dependencies = [
     "numpy>=1.24",
     "pandas>=2.0",
