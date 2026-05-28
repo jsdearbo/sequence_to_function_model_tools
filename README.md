@@ -1,5 +1,9 @@
 # sequence-foundation-model-tools
 
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![MIT License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![CI](https://github.com/jsdearbo/sequence_to_function_model_tools/actions/workflows/ci.yml/badge.svg)](https://github.com/jsdearbo/sequence_to_function_model_tools/actions/workflows/ci.yml)
+
 Reusable tools for training, fine-tuning, and interpreting genomic sequence-to-function models.
 
 Built around [gReLU](https://github.com/Genentech/gReLU) and designed for Borzoi-class foundation models. Provides:
