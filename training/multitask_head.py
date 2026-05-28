@@ -8,6 +8,28 @@ Provides plug-in prediction heads for Borzoi-class models supporting:
 
 All heads operate on (B, C, L) feature tensors from the model trunk,
 using 1D convolutions to preserve spatial resolution.
+
+Design note — the output-collapse problem
+-----------------------------------------
+When a shared trunk feeds into per-task *linear* heads (a single
+``Conv1d(hidden, 1, kernel_size=1)``), all tasks tend to collapse to
+identical predictions during training. The shared trunk learns features that
+minimize the average loss across tasks, and each task head simply learns the
+same affine map from those shared features. The result: all tasks output nearly
+the same mean signal regardless of cell-type or condition.
+
+:class:`SplitHead` prevents this by giving each task its own *nonlinear*
+projection — specifically, a ``Conv1d`` + ``GELU`` + ``BatchNorm1d`` +
+``Conv1d`` — before the final output. The per-task ``BatchNorm1d`` is the
+critical ingredient: it normalizes each task's hidden representation
+independently, forcing each head to maintain its own learned mean and variance.
+Even if the shared trunk encodes similar features for all tasks, the independent
+statistics prevent the outputs from collapsing.
+
+This adds roughly 31% more parameters to the head (~130K parameters per task at
+default hidden sizes), but that overhead is negligible relative to a Borzoi
+trunk (~150M parameters). See also :class:`ConditionalHead` for a different
+approach when cell-type identity is known at inference time.
 """
 
 import torch
