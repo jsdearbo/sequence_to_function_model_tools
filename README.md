@@ -12,6 +12,7 @@ Built around [gReLU](https://github.com/Genentech/gReLU) and designed for Borzoi
 - **Genomic intervals** — chromosome tiling, window centering, output bin mapping
 - **Splicing label generation** — hard/soft PSI labels from rMATS + StringTie, with priority-based disjoint segmentation
 - **Variant construction** — SNV generation and scoring for in silico mutagenesis
+- **Visualization** — ISM heatmaps, prediction tracks, gene model and attribution plots (matplotlib, no grelu required)
 - **Custom losses** — PSI-aware, Bhattacharyya, masked MSE/Poisson for multitask training
 - **Multitask heads** — nonlinear, split-head, and cell-type conditional architectures
 - **LoRA fine-tuning** — lightweight low-rank adaptation for Conv1d and Linear layers with weight merging
@@ -37,7 +38,8 @@ seq_tools/              Core sequence utilities
 ├── intervals.py        Genomic interval generation, centering, bin conversion
 ├── fasta.py            FASTA reading, windowed iteration
 ├── labels.py           Splicing label generation (rMATS + StringTie)
-└── variant.py          SNV generation and variant scoring
+├── variant.py          SNV generation and variant scoring
+└── visualization.py    ISM heatmaps, prediction tracks, gene model and attribution plots
 
 training/               Model training infrastructure
 ├── losses.py           PSI, Bhattacharyya, masked MSE/Poisson losses
@@ -100,6 +102,28 @@ cond_head = ConditionalHead(in_channels=1920, n_celltypes=5, out_channels=1)
 pred = cond_head(trunk_features, cell_type_id=torch.tensor([2]))
 ```
 
+### Visualize ISM results and model predictions
+
+```python
+from seq_tools.visualization import (
+    plot_ism_heatmap,
+    plot_prediction_track,
+    plot_gene_model,
+    multi_track_figure,
+)
+import matplotlib.pyplot as plt
+
+# ISM heatmap from score_variants output — shape (4, L), ACGT rows
+fig, ax = plt.subplots(figsize=(15, 2))
+plot_ism_heatmap(ism_matrix, genome_start=10_500_000, ax=ax, title="log2FC")
+
+# Stacked multi-track figure with shared x-axis
+fig, axes = multi_track_figure(3, height_ratios=[2, 1.5, 1])
+plot_prediction_track(predictions, ax=axes[0], ylabel="PSI")
+plot_ism_heatmap(ism_matrix, ax=axes[1])
+plot_gene_model(soft_label_df, ax=axes[2])
+```
+
 ### Generate splicing labels
 
 ```python
@@ -124,7 +148,7 @@ This toolkit extends [gReLU](https://github.com/Genentech/gReLU) rather than rep
 
 - Python ≥ 3.10
 - PyTorch ≥ 2.0
-- NumPy, Pandas
+- NumPy, Pandas, Matplotlib
 
 Optional:
 - [gReLU](https://github.com/Genentech/gReLU) — model loading, attribution, ISM

@@ -22,16 +22,16 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
-
-[project.urls]
-Repository = "https://github.com/jsdearbo/sequence_to_function_model_tools"
-"Bug Tracker" = "https://github.com/jsdearbo/sequence_to_function_model_tools/issues"
-
 dependencies = [
     "numpy>=1.24",
     "pandas>=2.0",
     "torch>=2.0",
+    "matplotlib>=3.5",
 ]
+
+[project.urls]
+Repository = "https://github.com/jsdearbo/sequence_to_function_model_tools"
+"Bug Tracker" = "https://github.com/jsdearbo/sequence_to_function_model_tools/issues"
 
 [project.optional-dependencies]
 full = [
