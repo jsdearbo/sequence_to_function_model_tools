@@ -195,12 +195,14 @@ def inject_lora(root: nn.Module, cfg: LoRAConfig) -> None:
 
             inject_lora(model.embedding, cfg)
     """
+    matched_count = 0
     wrapped_count = 0
 
     for name, module in list(root.named_modules()):
         if not _name_matches(name, cfg.target_patterns):
             continue
 
+        matched_count += 1
         parent = _get_parent(root, name)
         child_name = name.split(".")[-1]
         wrapped = None
@@ -240,7 +242,7 @@ def inject_lora(root: nn.Module, cfg: LoRAConfig) -> None:
 
     logger.info("[LoRA] Wrapped %d modules (rank=%d)", wrapped_count, cfg.rank)
 
-    if wrapped_count == 0:
+    if matched_count == 0:
         raise RuntimeError(
             "No modules matched LoRA target patterns. "
             "Verify module names with: list(model.named_modules())."
